@@ -36,7 +36,7 @@ La consigna establece: *"Esta API será el núcleo transaccional consumido por m
 En un modelo ingenuo (leer producto en memoria, restar en C# y guardar cambios), dos solicitudes concurrentes que ingresan al mismo tiempo con `Stock = 5` e intentan restar 4 unidades provocarían una **condición de carrera (Lost Update)**, dejando el stock en 1 o en valores negativos.
 
 ### La Solución Implementada
-Se implementó una estrategia de doble barrera:
+Se implementó una estrategia de triple barrera:
 1. **Restricción a nivel de motor de base de datos (Check Constraint):**
    * Se configuró en la tabla `products` la regla `CHECK ("Stock" >= 0)` y `CHECK ("Price" > 0)`, haciendo que el motor de base de datos rechace físicamente cualquier intento de balance negativo.
 2. **Actualización Atómica Directa (`ExecuteUpdateAsync`):**
@@ -49,7 +49,31 @@ Se implementó una estrategia de doble barrera:
      WHERE "Id" = @id AND ("Stock" + @delta) >= 0;
      ```
    * Si las filas afectadas son `0`, el repositorio evalúa si el producto no existe (devolviendo `null` para un `404 Not Found`) o si la deducción habría dejado el stock negativo (lanzando `InsufficientStockException` para devolver un `400 Bad Request` semántico con `ProblemDetails`).
+3. **Limitación de Tasa Nativa (Rate Limiting en .NET 10):**
+   * Se incorporó `AddRateLimiter` con partición por cliente (120 req/minuto) que devuelve `429 Too Many Requests` formateado en RFC 7807 ante ráfagas abusivas, mitigando denegación de servicio transaccional.
    * **Prueba comprobada:** Se incluyeron pruebas de integración multihilo donde **20 hilos simultáneos** descuentan unidades en el mismo milisegundo sin perder una sola actualización.
+
+---
+
+## 3. Seguridad Defensiva y Arquitectura Perimetral con Cloudflare
+
+Siguiendo el principio de **Defensa en Profundidad (Defense-in-Depth)** y mejores prácticas del sector financiero:
+
+### 3.1. Seguridad a Nivel de Aplicación (.NET 10)
+* **Cabeceras de Blindaje HTTP:**
+  * `X-Content-Type-Options: nosniff` (previene ataques de confusión MIME).
+  * `X-Frame-Options: DENY` (inmune a clickjacking).
+  * `Referrer-Policy: strict-origin-when-cross-origin`.
+  * `Permissions-Policy` restrictiva para APIs REST.
+* **Manejo Centralizado de Excepciones:** Intercepción global sin filtración de stack traces técnicos en respuestas.
+* **Health Checks con Sonda de Base de Datos:** `/health` monitorea activamente la conectividad con EF Core / PostgreSQL.
+
+### 3.2. Estrategia de Borde con Cloudflare (Producción Corporativa)
+Para un despliegue a escala de Fundación delamujer, la API está lista para integrarse con:
+* **Cloudflare API Shield:** Validación estricta del contrato OpenAPI (`swagger.json`) en el Edge, descartando llamadas malformadas o payloads fuera de esquema antes de que lleguen a la infraestructura backend.
+* **Cloudflare Rate Limiting Rules:** Reglas perimetrales específicas para `/api/products/*/stock` frenando intentos de agotamiento masivo de inventario.
+* **Cloudflare Tunnel (`cloudflared`):** Permite exponer el contenedor Docker de forma saliente cifrada sin abrir puertos públicos entrantes en los servidores de la fundación.
+
 
 ---
 
