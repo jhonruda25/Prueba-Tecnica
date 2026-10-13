@@ -14,7 +14,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
     public CustomWebApplicationFactory()
     {
-        // Unique shared-cache in-memory SQLite per factory instance with busy timeout
         _connection = new SqliteConnection($"Data Source=InMemoryDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared;");
         _connection.Open();
 
@@ -25,12 +24,21 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
+        builder.UseSetting("DatabaseProvider", "Sqlite");
+        builder.UseSetting("ConnectionStrings:DefaultConnection", _connection.ConnectionString);
+
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ProductCatalogDbContext>));
-            if (descriptor != null)
+            var descriptors = services.Where(d =>
+                d.ServiceType == typeof(DbContextOptions<ProductCatalogDbContext>) ||
+                d.ServiceType == typeof(DbContextOptions) ||
+                d.ServiceType == typeof(ProductCatalogDbContext)
+            ).ToList();
+
+            foreach (var d in descriptors)
             {
-                services.Remove(descriptor);
+                services.Remove(d);
             }
 
             services.AddDbContext<ProductCatalogDbContext>(options =>

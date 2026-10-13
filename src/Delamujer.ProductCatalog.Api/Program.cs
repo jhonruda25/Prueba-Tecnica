@@ -12,6 +12,13 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Dynamically bind to PaaS-injected port (Railway/Render/Fly.io) or default to 8080
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
+
 // Add architectural layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -38,43 +45,46 @@ builder.Services.AddCors(options =>
 });
 
 // Native Rate Limiting (Defense-in-depth against DoS and transactional flooding)
-builder.Services.AddRateLimiter(options =>
+if (builder.Environment.EnvironmentName != "Testing")
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    builder.Services.AddRateLimiter(options =>
     {
-        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: clientIp,
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 120, // 120 requests per minute per client
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            });
-    });
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        context.HttpContext.Response.ContentType = "application/problem+json";
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-
-        var problemDetails = new ProblemDetails
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         {
-            Status = StatusCodes.Status429TooManyRequests,
-            Title = "Too Many Requests",
-            Type = "https://datatracker.ietf.org/doc/html/rfc6585#section-4",
-            Detail = "Rate limit threshold exceeded. Please retry after a short period.",
-            Instance = context.HttpContext.Request.Path
-        };
-        problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: clientIp,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 120, // 120 requests per minute per client
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                });
+        });
 
-        var json = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-        await context.HttpContext.Response.WriteAsync(json, cancellationToken);
-    };
-});
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.ContentType = "application/problem+json";
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+            var problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status429TooManyRequests,
+                Title = "Too Many Requests",
+                Type = "https://datatracker.ietf.org/doc/html/rfc6585#section-4",
+                Detail = "Rate limit threshold exceeded. Please retry after a short period.",
+                Instance = context.HttpContext.Request.Path
+            };
+            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+            var json = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            await context.HttpContext.Response.WriteAsync(json, cancellationToken);
+        };
+    });
+}
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -104,7 +114,10 @@ var app = builder.Build();
 // Pipeline Middlewares
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-app.UseRateLimiter();
+if (app.Environment.EnvironmentName != "Testing")
+{
+    app.UseRateLimiter();
+}
 
 // Always serve interactive documentation on root path
 app.UseSwagger();
