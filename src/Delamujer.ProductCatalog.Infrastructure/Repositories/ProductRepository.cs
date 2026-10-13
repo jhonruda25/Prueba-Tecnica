@@ -76,33 +76,52 @@ public class ProductRepository : IProductRepository
         }
 
         var now = DateTimeOffset.UtcNow;
+        const int maxAttempts = 10;
 
-        // Atomic database-level update: updates only if resulting stock >= 0
-        var rowsAffected = await _context.Products
-            .Where(p => p.Id == id && (p.Stock + delta) >= 0)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(p => p.Stock, p => p.Stock + delta)
-                .SetProperty(p => p.ConcurrencyToken, Guid.NewGuid())
-                .SetProperty(p => p.UpdatedAtUtc, now),
-                cancellationToken);
-
-        if (rowsAffected == 1)
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            return await _context.Products
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            try
+            {
+                // Atomic database-level update: updates only if resulting stock >= 0
+                var rowsAffected = await _context.Products
+                    .Where(p => p.Id == id && (p.Stock + delta) >= 0)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Stock, p => p.Stock + delta)
+                        .SetProperty(p => p.ConcurrencyToken, Guid.NewGuid())
+                        .SetProperty(p => p.UpdatedAtUtc, now),
+                        cancellationToken);
+
+                if (rowsAffected == 1)
+                {
+                    return await _context.Products
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+                }
+
+                // Differentiate between non-existent product vs insufficient stock
+                var existing = await _context.Products
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+                if (existing is null)
+                {
+                    return null;
+                }
+
+                throw new InsufficientStockException(existing.Id, existing.Stock, delta);
+            }
+            catch (Exception ex) when (attempt < maxAttempts && IsLockException(ex))
+            {
+                await Task.Delay(30 * attempt, cancellationToken);
+            }
         }
 
-        // Differentiate between non-existent product vs insufficient stock
-        var existing = await _context.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return null;
+    }
 
-        if (existing is null)
-        {
-            return null;
-        }
-
-        throw new InsufficientStockException(existing.Id, existing.Stock, delta);
+    private static bool IsLockException(Exception ex)
+    {
+        return ex.InnerException is Microsoft.Data.Sqlite.SqliteException { SqliteErrorCode: 5 } ||
+               ex is Microsoft.Data.Sqlite.SqliteException { SqliteErrorCode: 5 };
     }
 }

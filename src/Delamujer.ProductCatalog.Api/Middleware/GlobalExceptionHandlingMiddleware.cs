@@ -128,6 +128,6 @@ public class GlobalExceptionHandlingMiddleware
         context.Response.StatusCode = statusCode;
 
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, problemDetails.GetType(), jsonOptions));
     }
 }
