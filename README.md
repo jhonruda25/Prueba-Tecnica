@@ -3,6 +3,9 @@
 
 > API REST backend de grado de producción diseñada como núcleo transaccional de alta concurrencia para la gestión de catálogo de productos e inventario, implementada con **Clean Architecture** en **.NET 10 (C# 14)** y persistencia relacional en **PostgreSQL**.
 
+> 🌐 **Repositorio en GitHub:** [https://github.com/jhonruda25/Prueba-Tecnica](https://github.com/jhonruda25/Prueba-Tecnica)  
+> 🚀 **Swagger UI en Producción (URL Pública):** Ver instrucciones en [Sección 6](#6-despliegue-en-la-nube-url-pública-funcional).
+
 ---
 
 ## 1. Justificación y Decisiones de Arquitectura
@@ -132,7 +135,7 @@ Si un descuento excede el inventario disponible:
 
 ## 4. Ejecución de Pruebas Automatizadas
 
-El proyecto cuenta con **45 pruebas automatizadas** (34 unitarias y 11 de integración):
+El proyecto cuenta con **47 pruebas automatizadas** (34 unitarias y 13 de integración):
 
 ```bash
 dotnet test Delamujer.ProductCatalog.slnx
@@ -230,3 +233,8 @@ Siguiendo las recomendaciones de la prueba técnica, el desarrollo se versionó 
 5. `feat(api): expose REST endpoints, ProblemDetails middleware, Swagger UI and database seeding`
 6. `test: add integration tests and stock concurrency validation under parallel stress`
 7. `ci/cd: add multi-stage dockerfile, compose and deployment documentation`
+8. `feat(security): add native rate limiting, security headers, database health checks and Cloudflare documentation`
+9. `chore(api): add swagger route alias redirect to root documentation`
+10. `ci/cd: migrate docker runtime to alpine linux with non-root user and zero build secrets`
+11. `test: configure WebApplicationFactory isolated database provider and rate limiting bypass in testing`
+12. `docs: add railway deployment guide to readme`
