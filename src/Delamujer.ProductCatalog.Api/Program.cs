@@ -118,6 +118,7 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowAll");
 
 app.MapHealthChecks("/health");
+app.MapGet("/swagger", () => Results.Redirect("/"));
 app.MapControllers();
 
 // Execute automated migrations and seeding
