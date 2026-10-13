@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Delamujer.ProductCatalog.Api/Delamujer.ProductCatalog.Api.csproj" />
+    <Project Path="src/Delamujer.ProductCatalog.Application/Delamujer.ProductCatalog.Application.csproj" />
+    <Project Path="src/Delamujer.ProductCatalog.Domain/Delamujer.ProductCatalog.Domain.csproj" />
+    <Project Path="src/Delamujer.ProductCatalog.Infrastructure/Delamujer.ProductCatalog.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Delamujer.ProductCatalog.IntegrationTests/Delamujer.ProductCatalog.IntegrationTests.csproj" />
+    <Project Path="tests/Delamujer.ProductCatalog.UnitTests/Delamujer.ProductCatalog.UnitTests.csproj" />
+  </Folder>
+</Solution>
