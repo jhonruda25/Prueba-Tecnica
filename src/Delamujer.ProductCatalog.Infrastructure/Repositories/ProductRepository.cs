@@ -82,6 +82,7 @@ public class ProductRepository : IProductRepository
             .Where(p => p.Id == id && (p.Stock + delta) >= 0)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(p => p.Stock, p => p.Stock + delta)
+                .SetProperty(p => p.ConcurrencyToken, Guid.NewGuid())
                 .SetProperty(p => p.UpdatedAtUtc, now),
                 cancellationToken);
 

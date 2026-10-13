@@ -20,7 +20,7 @@ public class Product : BaseEntity
     /// <summary>
     /// Concurrency token for optimistic locking in high-throughput concurrent environments.
     /// </summary>
-    public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
+    public Guid ConcurrencyToken { get; private set; } = Guid.NewGuid();
 
     // Parameterless constructor for ORM materialization
     protected Product() { }
@@ -59,6 +59,7 @@ public class Product : BaseEntity
         Name = name.Trim();
         Description = (description ?? string.Empty).Trim();
         Price = price;
+        ConcurrencyToken = Guid.NewGuid();
         UpdatedAtUtc = DateTimeOffset.UtcNow;
     }
 
@@ -81,6 +82,7 @@ public class Product : BaseEntity
         }
 
         Stock = newStock;
+        ConcurrencyToken = Guid.NewGuid();
         UpdatedAtUtc = DateTimeOffset.UtcNow;
     }
 

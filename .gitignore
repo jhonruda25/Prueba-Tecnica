@@ -6,6 +6,10 @@
 # Pi & Local tooling
 .atl/
 .pi/
+*.db
+*.db-shm
+*.db-wal
+
 
 
 # User-specific files

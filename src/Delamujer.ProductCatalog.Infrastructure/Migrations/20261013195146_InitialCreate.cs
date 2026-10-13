@@ -21,9 +21,9 @@ namespace Delamujer.ProductCatalog.Infrastructure.Migrations
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    ConcurrencyToken = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

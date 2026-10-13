@@ -39,13 +39,19 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired();
 
         builder.Property(p => p.CreatedAtUtc)
+            .HasConversion(
+                v => v.UtcDateTime,
+                v => new DateTimeOffset(v, TimeSpan.Zero))
             .IsRequired();
 
         builder.Property(p => p.UpdatedAtUtc)
-            .IsRequired(false);
+            .HasConversion(
+                v => v.HasValue ? v.Value.UtcDateTime : (DateTime?)null,
+                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
 
-        builder.Property(p => p.RowVersion)
-            .IsRowVersion();
+        builder.Property(p => p.ConcurrencyToken)
+            .IsConcurrencyToken()
+            .IsRequired();
 
         // Indexes for fast searching and active product filtering
         builder.HasIndex(p => p.Name);
