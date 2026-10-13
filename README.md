@@ -178,9 +178,25 @@ dotnet run --project src/Delamujer.ProductCatalog.Api/Delamujer.ProductCatalog.A
 
 ## 6. Despliegue en la Nube (URL Pública Funcional)
 
-Para cumplir con el requerimiento de entrega con URL pública funcional, se recomienda el despliegue en **Render** o **Railway** utilizando el `Dockerfile` provisto:
+Para cumplir con el requerimiento de entrega con URL pública funcional, se recomienda el despliegue en **Railway** o **Render** utilizando el `Dockerfile` provisto:
 
-### Pasos para Despliegue en Render (Gratuito y Replicable):
+### Opción A: Despliegue en Railway (Recomendado - 3 Minutos):
+1. Ingresa a [railway.app](https://railway.app) e inicia sesión con tu cuenta de GitHub (**jhonruda25**).
+2. Haz clic en **New Project** $\rightarrow$ **Provision PostgreSQL**.
+   * Railway creará una base de datos PostgreSQL administrada al instante.
+3. En el mismo proyecto, haz clic en **+ New** $\rightarrow$ **GitHub Repo** $\rightarrow$ selecciona **`jhonruda25/Prueba-Tecnica`**.
+   * Railway detectará el `Dockerfile` multi-stage automáticamente.
+4. En el servicio web (`Prueba-Tecnica`), ve a la pestaña **Variables** y agrega:
+   * `DatabaseProvider` = `PostgreSQL`
+   * `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` *(Railway vincula la base de datos automáticamente)*
+   * `ASPNETCORE_ENVIRONMENT` = `Production`
+5. En la pestaña **Settings** $\rightarrow$ **Networking**, haz clic en **Generate Domain**.
+   * Te generará una URL pública automática (ej: `https://prueba-tecnica-production-xxxx.up.railway.app`).
+6. ¡Listo! El contenedor compilará, correrá las migraciones en PostgreSQL, sembrará los 5 productos iniciales y al abrir la URL pública en tu navegador verás directamente la interfaz interactiva de **Swagger UI**.
+
+---
+
+### Opción B: Despliegue en Render:
 1. Sube este repositorio a tu cuenta de **GitHub** o **GitLab**.
 2. Ingresa a [Render.com](https://render.com) e inicia sesión.
 3. **Paso 1 (Base de Datos PostgreSQL):**
