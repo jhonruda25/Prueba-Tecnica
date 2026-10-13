@@ -4,7 +4,8 @@
 > API REST backend de grado de producción diseñada como núcleo transaccional de alta concurrencia para la gestión de catálogo de productos e inventario, implementada con **Clean Architecture** en **.NET 10 (C# 14)** y persistencia relacional en **PostgreSQL**.
 
 > 🌐 **Repositorio en GitHub:** [https://github.com/jhonruda25/Prueba-Tecnica](https://github.com/jhonruda25/Prueba-Tecnica)  
-> 🚀 **Swagger UI en Producción (URL Pública):** Ver instrucciones en [Sección 6](#6-despliegue-en-la-nube-url-pública-funcional).
+> 🚀 **Swagger UI en Producción (URL Pública Funcional):** [https://prueba-tecnica-ahee.onrender.com/](https://prueba-tecnica-ahee.onrender.com/)  
+> 🩺 **Health Check en Producción:** [https://prueba-tecnica-ahee.onrender.com/health](https://prueba-tecnica-ahee.onrender.com/health)
 
 ---
 
