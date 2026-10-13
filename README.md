@@ -1,6 +1,11 @@
 # Fundación delamujer — API de Catálogo de Productos y Stock
 ### Prueba Técnica: Analista Desarrollador de Aplicaciones
 
+[![CI Pipeline](https://github.com/jhonruda25/Prueba-Tecnica/actions/workflows/ci.yml/badge.svg)](https://github.com/jhonruda25/Prueba-Tecnica/actions/workflows/ci.yml)
+[![.NET 10 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Docker Alpine](https://img.shields.io/badge/Docker-Alpine%20Linux-2496ED?logo=docker)](https://hub.docker.com/_/alpine)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2016-4169E1?logo=postgresql)](https://www.postgresql.org/)
+
 > API REST backend de grado de producción diseñada como núcleo transaccional de alta concurrencia para la gestión de catálogo de productos e inventario, implementada con **Clean Architecture** en **.NET 10 (C# 14)** y persistencia relacional en **PostgreSQL**.
 
 > 🌐 **Repositorio en GitHub:** [https://github.com/jhonruda25/Prueba-Tecnica](https://github.com/jhonruda25/Prueba-Tecnica)  

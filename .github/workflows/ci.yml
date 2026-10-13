@@ -1,0 +1,30 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore Delamujer.ProductCatalog.slnx
+
+      - name: Build Solution
+        run: dotnet build Delamujer.ProductCatalog.slnx -c Release --no-restore
+
+      - name: Run Automated Tests
+        run: dotnet test Delamujer.ProductCatalog.slnx -c Release --no-build --verbosity normal

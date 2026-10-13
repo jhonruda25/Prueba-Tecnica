@@ -1,6 +1,72 @@
-@Delamujer.ProductCatalog.Api_HostAddress = http://localhost:5086
+@HostAddress = http://localhost:5086
+@ProductionUrl = https://prueba-tecnica-ahee.onrender.com
 
-GET {{Delamujer.ProductCatalog.Api_HostAddress}}/weatherforecast/
+### 1. Health Check (Local)
+GET {{HostAddress}}/health
+Accept: text/plain
+
+### 2. Health Check (Production)
+GET {{ProductionUrl}}/health
+Accept: text/plain
+
+### 3. Listar Productos Paginados (Local)
+GET {{HostAddress}}/api/products?pageNumber=1&pageSize=10
 Accept: application/json
 
-###
+### 4. Listar Productos Paginados (Producción)
+GET {{ProductionUrl}}/api/products?pageNumber=1&pageSize=10
+Accept: application/json
+
+### 5. Crear Nuevo Producto
+# @name createProduct
+POST {{HostAddress}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Microcrédito Mujer Digital",
+  "description": "Línea de crédito para adquisición de tecnología y comercio digital.",
+  "price": 1450000.00,
+  "initialStock": 25
+}
+
+### 6. Consultar Producto por ID
+@CreatedId = {{createProduct.response.body.id}}
+GET {{HostAddress}}/api/products/{{CreatedId}}
+Accept: application/json
+
+### 7. Ajustar Stock (+10 unidades)
+PATCH {{HostAddress}}/api/products/{{CreatedId}}/stock
+Content-Type: application/json
+
+{
+  "quantityDelta": 10
+}
+
+### 8. Descontar Stock (-20 unidades)
+PUT {{HostAddress}}/api/products/{{CreatedId}}/stock
+Content-Type: application/json
+
+{
+  "quantityDelta": -20
+}
+
+### 9. Intento de Descuento Inválido (Stock Negativo -> 400 Bad Request ProblemDetails)
+PATCH {{HostAddress}}/api/products/{{CreatedId}}/stock
+Content-Type: application/json
+
+{
+  "quantityDelta": -500
+}
+
+### 10. Actualizar Información General del Producto
+PUT {{HostAddress}}/api/products/{{CreatedId}}
+Content-Type: application/json
+
+{
+  "name": "Microcrédito Mujer Digital Plus",
+  "description": "Línea ampliada con asesoría empresarial y comercio digital.",
+  "price": 1600000.00
+}
+
+### 11. Eliminar Producto (Desactivación Lógica -> 204 No Content)
+DELETE {{HostAddress}}/api/products/{{CreatedId}}
